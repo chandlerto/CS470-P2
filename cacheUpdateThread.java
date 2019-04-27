@@ -35,9 +35,9 @@ public class cacheUpdateThread extends Thread
 						content.append("\n");
 					}					
 					in.close();
-					
 					String contentString = content.toString();
-					CacheManager.storeResponse(url.toString(), contentString );
+					byte[] contentBytes = contentString.getBytes();
+					CacheManager.storeResponse(url.toString(), contentBytes );
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
