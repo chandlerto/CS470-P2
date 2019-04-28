@@ -45,60 +45,55 @@ public class ConnectionHandlerThread extends Thread
         System.out.println();
         System.out.println("METHOD: " + method );
 
-        if ( !method.equals("GET") )
+        if ( method.equals("GET") )
         {
-            sendErrorResponse();
-        }
-
-        String address = getAddress( contents );
-        System.out.println( "ADDRESS: " + address );
-
-        //ADD SUPPORT FOR GET IF MODIFIED SINCE
-        if ( hasConditionalGet( contents ) )
-        {
-            String getIfModifiedSince = getConditionalTime( contents );
-            System.out.println("If-Modified-Since: " + getIfModifiedSince );
-            try
+            String address = getAddress( contents );
+            System.out.println( "ADDRESS: " + address );
+    
+            //ADD SUPPORT FOR GET IF MODIFIED SINCE
+            if ( hasConditionalGet( contents ) )
             {
-                sendResponse( address, getIfModifiedSince );
-            } catch (IOException e)
+                String getIfModifiedSince = getConditionalTime( contents );
+                System.out.println("If-Modified-Since: " + getIfModifiedSince );
+                try
+                {
+                    sendResponse( address, getIfModifiedSince );
+                } catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else if ( !CacheManager.inCache( address ) )
             {
-                e.printStackTrace();
+                System.out.println( "not in cache. Sending response " );
+                try
+                {
+                    sendResponse( address );
+                } catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else
+            {
+                System.out.println( "in cache. sending response");
+                try
+                {
+                    sendCachedResponse( address );
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
-        else if ( !CacheManager.inCache( address ) )
-        {
-            System.out.println( "not in cache. Sending response " );
-            try
-            {
-                sendResponse( address );
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        else
-        {
-            System.out.println( "in cache. sending response");
-            try
-            {
-                sendCachedResponse( address );
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        System.out.println( contents );
     }
 
     public String getConditionalTime( String content )
     {
         int index = content.indexOf("If-Modified-Since:");
-        //offset to compensate for title of header
-        index = index + 18;
-        //might should be 29
-        String date = content.substring( index, index + 30);
+        index = index + 19;
+        String date = content.substring( index, index + 29);
         return date;
         
     }
@@ -129,6 +124,7 @@ public class ConnectionHandlerThread extends Thread
         clientReader.close();
         clientSocket.close();
 
+        System.out.println( " CONTENT: " + contentString );
         byte[] contentBytes = contentString.getBytes();
         CacheManager.storeResponse( address, contentBytes );
     }
