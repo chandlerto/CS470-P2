@@ -45,4 +45,9 @@ public class CacheManager {
 		
 		return bytes;
 	}
+
+	static boolean inCache( String key )
+	{
+		return cacheHash.containsKey( key );
+	}
 }

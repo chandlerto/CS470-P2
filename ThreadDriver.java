@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.SocketException;
 
@@ -16,13 +17,24 @@ public class ThreadDriver {
 	
 	public static void main(String[] args) throws SocketException 
 	{
+		ServerSocket serverSocket = null;
+		try
+		{
+			serverSocket = new ServerSocket( 80 );
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 		
 		while (true)
 		{
 			try 
 			{
-				ServerSocket serverSocket = new ServerSocket(DRIVER_PORT);
-				//new nameOfThread(serverSocket.accept()).start();
+				//ServerSocket serverSocket = new ServerSocket( 80 );
+				Socket newSocket = serverSocket.accept();
+				System.out.println(" accepted client request \n" );
+				new ConnectionHandlerThread( newSocket ).start();
 				
 				//TODO What parameter to pass to thread?
 				//Currently passing in the client's socket
@@ -36,3 +48,5 @@ public class ThreadDriver {
 	}
 
 }
+
+// my ip: 150.243.201.182
