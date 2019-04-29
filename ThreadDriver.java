@@ -17,6 +17,8 @@ public class ThreadDriver {
 	
 	public static void main(String[] args) throws SocketException 
 	{
+		cacheUpdateThread updator = new cacheUpdateThread();
+		updator.start();
 		ServerSocket serverSocket = null;
 		try
 		{
@@ -34,7 +36,7 @@ public class ThreadDriver {
 				//ServerSocket serverSocket = new ServerSocket( 80 );
 				Socket newSocket = serverSocket.accept();
 				System.out.println(" accepted client request \n" );
-				new ConnectionHandlerThread( newSocket ).start();
+				new HttpRequestThread( newSocket ).start();
 				
 				//TODO What parameter to pass to thread?
 				//Currently passing in the client's socket
