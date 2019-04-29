@@ -94,7 +94,7 @@ public class HttpRequestThread extends Thread
 			
 			// Create initial response line
 			int responseCode = serverConnection.getResponseCode();
-			String responseLine = httpVersion + responseCode + serverConnection.getResponseMessage() + "\r\n";
+			String responseLine = httpVersion + " " + responseCode + " " + serverConnection.getResponseMessage() + "\r\n";
 			String copyToCache = "";
 			
 			if(responseCode == 200) // If the request was OK
@@ -104,9 +104,9 @@ public class HttpRequestThread extends Thread
 				clientOutputStream.write(responseLine);
 				// Write response headers to client
 				String responseHeaderLine = "";
-				for(int headerIndex = 0; serverConnection.getHeaderField(headerIndex) != null; headerIndex++)
+				for(int headerIndex = 1; serverConnection.getHeaderField(headerIndex) != null; headerIndex++)
 				{
-					responseHeaderLine = serverConnection.getHeaderFieldKey(headerIndex) + serverConnection.getHeaderField(headerIndex) + "\r\n";
+					responseHeaderLine = serverConnection.getHeaderFieldKey(headerIndex) + ": " + serverConnection.getHeaderField(headerIndex) + "\r\n";
 					clientOutputStream.write(responseHeaderLine);
 				}
 				// Response headers are separated by a blank line
