@@ -56,8 +56,8 @@ public class HttpRequestThread extends Thread
 				fullURL = "http://" + fullURL;
 			}
 
-			// Checks if proxy contains a cached copy and the request is non-conditional
-			// Returns the cached copy if so
+			// Checks if our proxy contains a cached copy and the request is non-conditional
+			// Returns the cached copy if so and returns from thread
 			if(CacheManager.inCache(fullURL) && !headerMap.containsKey("If-Modified-Since"))
 			{
         		String cachedResponse = new String(CacheManager.getResponse(fullURL));
@@ -80,6 +80,7 @@ public class HttpRequestThread extends Thread
 			if(parameterLine.length() > 0)
 			{
 				serverConnection.setDoOutput(true);
+				// I think .getOutputStream() will start the connection
 				DataOutputStream connectionWriteStream = new DataOutputStream(serverConnection.getOutputStream());
 				connectionWriteStream.writeBytes(parameterLine);
 				connectionWriteStream.close();
@@ -87,25 +88,38 @@ public class HttpRequestThread extends Thread
 			
 			serverConnection.connect();
 			
-			// Create full response line
+			// Create initial response line
 			int responseCode = serverConnection.getResponseCode();
-			String responseLine = httpVersion + responseCode + serverConnection.getResponseMessage();
+			String responseLine = httpVersion + responseCode + serverConnection.getResponseMessage() + "\r\n";
 			String copyToCache = "";
 			
-			if(responseCode == 200)
+			if(responseCode == 200) // If the request was OK
 			{
 				BufferedReader connectionReadStream = new BufferedReader(new InputStreamReader(serverConnection.getInputStream()));
+				// Write the initial response line to client
+				clientOutputStream.write(responseLine);
+				// Write response headers to client
+				String responseHeaderLine = "";
+				for(int headerIndex = 0; serverConnection.getHeaderField(headerIndex) != null; headerIndex++)
+				{
+					responseHeaderLine = serverConnection.getHeaderFieldKey(headerIndex) + serverConnection.getHeaderField(headerIndex) + "\r\n";
+					clientOutputStream.write(responseHeaderLine);
+				}
+				// Response headers are separated by a blank line
+				clientOutputStream.write("\r\n");
+				// Write response body to client
 				String responseBodyLine;
 				while ((responseBodyLine = connectionReadStream.readLine()) != null)
 				{
-					responseBodyLine += "/r/n";
+					responseBodyLine += "\r\n";
 					clientOutputStream.write(responseBodyLine);
 					copyToCache += responseBodyLine;
 				}
 				connectionReadStream.close();
+				// Store the response body copy in the cache
 				CacheManager.storeResponse(fullURL, copyToCache.getBytes());
 			}
-			else
+			else // Write the status line to client if error received
 			{
 				clientOutputStream.write(responseLine);
 			}
