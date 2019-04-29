@@ -62,6 +62,10 @@ public class HttpRequestThread extends Thread
 			{
         		String cachedResponse = new String(CacheManager.getResponse(fullURL));
 				clientOutputStream.write(cachedResponse);
+				clientOutputStream.flush();
+		        clientOutputStream.close();
+		        clientInputStream.close();
+		        clientSocket.close();
 				return;
 			}
 
@@ -116,12 +120,20 @@ public class HttpRequestThread extends Thread
 					copyToCache += responseBodyLine;
 				}
 				connectionReadStream.close();
+				clientOutputStream.flush();
+		        clientOutputStream.close();
+		        clientInputStream.close();
+		        clientSocket.close();
 				// Store the response body copy in the cache
 				CacheManager.storeResponse(fullURL, copyToCache.getBytes());
 			}
 			else // Write the status line to client if error received
 			{
 				clientOutputStream.write(responseLine);
+				clientOutputStream.flush();
+		        clientOutputStream.close();
+		        clientInputStream.close();
+		        clientSocket.close();
 			}
 		}
 		catch (IOException e)
