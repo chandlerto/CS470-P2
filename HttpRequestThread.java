@@ -46,10 +46,13 @@ public class HttpRequestThread extends Thread
 			
 			// Store additional parameter arguments
 			String parameterLine = "";
-			if((parameterLine = clientInputStream.readLine()) != null) {}
+			if(clientInputStream.ready() && (parameterLine = clientInputStream.readLine()) != null) {}
 
 			// Create full URL from Host header value and file from request line
-			String fullURL = headerMap.get("Host") + fileRequest;
+			//String hostName = headerMap.get("Host"); // Currently unused. Originally used to create full URL if fileRequest did not specify full address
+			String fullURL = "";	
+			fullURL = fileRequest;
+			
 			// Append "http://" if it's not present
 			if(!fullURL.substring(0, 4).equals("http"))
 			{
@@ -60,6 +63,8 @@ public class HttpRequestThread extends Thread
 			// Returns the cached copy if so and returns from thread
 			if(CacheManager.inCache(fullURL) && !headerMap.containsKey("If-Modified-Since"))
 			{
+				clientOutputStream.write(httpVersion + " 200 OK\r\n");
+				clientOutputStream.write("\r\n");
         		String cachedResponse = new String(CacheManager.getResponse(fullURL));
 				clientOutputStream.write(cachedResponse);
 				clientOutputStream.flush();
@@ -72,6 +77,7 @@ public class HttpRequestThread extends Thread
 			// Create HttpURLConnection
 			URL connectionURL = new URL(fullURL);
 			HttpURLConnection serverConnection = (HttpURLConnection)connectionURL.openConnection();
+			serverConnection.setConnectTimeout(10000);
 			
 			serverConnection.setRequestMethod(requestMethod);
 			// Add headers and values to connection
@@ -89,6 +95,8 @@ public class HttpRequestThread extends Thread
 				connectionWriteStream.writeBytes(parameterLine);
 				connectionWriteStream.close();
 			}
+			
+			System.out.println(clientRequest);
 			
 			serverConnection.connect();
 			
